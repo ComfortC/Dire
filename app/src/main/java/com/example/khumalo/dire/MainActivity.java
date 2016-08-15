@@ -4,27 +4,40 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
 
-public class MainActivity extends AppCompatActivity {
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 
-    static TextView Display;
-    protected ResultReceiver DirectionsReceiver;
+public class MainActivity extends FragmentActivity
+        implements OnMapReadyCallback {
+
+    GoogleMap mMap;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        DirectionsReceiver = new ResultReceiver();
-        Display = (TextView)findViewById(R.id.textView);
-        Intent intent = new Intent(this,DirectionService.class);
-        startService(intent);
+        MapFragment mapFragment = (MapFragment) getFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
 
-    }
+
+}
+
     @Override
+    public void onMapReady(GoogleMap googleMap) {
+      mMap = googleMap;
+        mMap.addMarker(new MarkerOptions().position(new LatLng(-34.353825, 18.473618)));
+    }
+   /* @Override
     protected void onResume() {
         super.onResume();
         LocalBroadcastManager.getInstance(this).registerReceiver(DirectionsReceiver,
@@ -35,7 +48,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(DirectionsReceiver);
-    }
+    }*/
 
     public class ResultReceiver extends BroadcastReceiver{
 
@@ -44,7 +57,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onReceive(Context context, Intent intent) {
             Log.d("Tag", "OnReceive Was Called");
-            Display.setText(intent.getStringExtra(Constants.RESULT_EXTRA));
+
         }
     }
 }
