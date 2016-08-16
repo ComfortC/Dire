@@ -13,11 +13,15 @@ import android.widget.TextView;
 
 import com.example.khumalo.dire.Utils.Constants;
 import com.example.khumalo.dire.Utils.Utils;
+import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import org.json.JSONException;
 
@@ -80,8 +84,20 @@ public class MainActivity extends FragmentActivity
             }
             PolyLocations = decode(PolylineCode);
             Log.d("Tag", PolyLocations.toString());
-
+            drawPath(mMap, PolyLocations);
 
         }
+    }
+
+    private void drawPath(GoogleMap mMap, List<LatLng> polyLocations) {
+        int finalPosition = polyLocations.size()-1;
+        PolylineOptions rectOptions = new PolylineOptions()
+                .addAll(polyLocations);
+
+        Polyline polyline = mMap.addPolyline(rectOptions);
+        LatLngBounds.Builder builder = new LatLngBounds.Builder();
+        builder.include(polyLocations.get(0)).include(polyLocations.get(finalPosition));
+        LatLngBounds bounds = builder.build();
+        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds,0),4000,null);
     }
 }
