@@ -56,7 +56,7 @@ public class MainActivity extends FragmentActivity
     @Override
     public void onMapReady(GoogleMap googleMap) {
       mMap = googleMap;
-        mMap.addMarker(new MarkerOptions().position(new LatLng(-34.353825, 18.473618)));
+
     }
 
     @Override
