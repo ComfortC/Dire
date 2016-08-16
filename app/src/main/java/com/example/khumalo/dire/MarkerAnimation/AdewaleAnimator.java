@@ -33,13 +33,9 @@ public class AdewaleAnimator {
 
         private static final int ANIMATE_SPEEED = 1000;
 
-
-
         private final LinearInterpolator interpolator = new LinearInterpolator();
 
         int currentIndex = 0;
-
-
 
         long start = SystemClock.uptimeMillis();
 
@@ -50,13 +46,6 @@ public class AdewaleAnimator {
             mHandler.removeCallbacks(animator);
 
         }
-
-
-
-
-
-
-
 
 
         public void stopAnimation() {
@@ -80,17 +69,9 @@ public class AdewaleAnimator {
 
             trackingMarker.setPosition(newPosition);
 
-
-
-            // It's not possible to move the marker + center it through a cameraposition update while another camerapostioning was already happening.
-            //navigateToPoint(newPosition,tilt,bearing,currentZoom,false);
-            //navigateToPoint(newPosition,false);
-
             if (t < 1) {
                 mHandler.postDelayed(this, 16);
             } else {
-
-
                 // imagine 5 elements -  0|1|2|3|4 currentindex must be smaller than 4
                 if (currentIndex < Directions.size() - 2) {
 
@@ -106,7 +87,6 @@ public class AdewaleAnimator {
 
             }
         }
-
 
         private LatLng getEndLatLng() {
             return Directions.get(currentIndex + 1);
