@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
 
+import com.example.khumalo.dire.Utils.Constants;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -21,6 +22,7 @@ public class MainActivity extends FragmentActivity
         implements OnMapReadyCallback {
 
     GoogleMap mMap;
+    ResultReceiver DirectionsReceiver;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -28,7 +30,9 @@ public class MainActivity extends FragmentActivity
         MapFragment mapFragment = (MapFragment) getFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
+        DirectionsReceiver = new ResultReceiver();
+        Intent intent = new Intent(this, DirectionService.class);
+        startService(intent);
 
 }
 
@@ -37,7 +41,8 @@ public class MainActivity extends FragmentActivity
       mMap = googleMap;
         mMap.addMarker(new MarkerOptions().position(new LatLng(-34.353825, 18.473618)));
     }
-   /* @Override
+
+    @Override
     protected void onResume() {
         super.onResume();
         LocalBroadcastManager.getInstance(this).registerReceiver(DirectionsReceiver,
@@ -48,7 +53,7 @@ public class MainActivity extends FragmentActivity
     protected void onPause() {
         super.onPause();
         LocalBroadcastManager.getInstance(this).unregisterReceiver(DirectionsReceiver);
-    }*/
+    }
 
     public class ResultReceiver extends BroadcastReceiver{
 
@@ -56,7 +61,7 @@ public class MainActivity extends FragmentActivity
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d("Tag", "OnReceive Was Called");
+            Log.d("Tag", intent.getStringExtra(Constants.RESULT_EXTRA));
 
         }
     }
