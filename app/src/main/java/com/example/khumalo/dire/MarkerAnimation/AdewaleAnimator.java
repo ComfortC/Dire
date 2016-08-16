@@ -31,7 +31,7 @@ public class AdewaleAnimator {
 
     public class Animator implements Runnable {
 
-        private static final int ANIMATE_SPEEED = 1000;
+        private static final int ANIMATE_SPEEED = 500;
 
         private final LinearInterpolator interpolator = new LinearInterpolator();
 
