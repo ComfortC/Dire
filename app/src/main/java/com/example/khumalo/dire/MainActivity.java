@@ -12,6 +12,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.TextView;
 
+import com.example.khumalo.dire.MarkerAnimation.AdewaleAnimator;
+import com.example.khumalo.dire.MarkerAnimation.LatLngInterpolator;
+import com.example.khumalo.dire.MarkerAnimation.MarkerAnimation;
 import com.example.khumalo.dire.Utils.Constants;
 import com.example.khumalo.dire.Utils.Utils;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -40,6 +43,7 @@ public class MainActivity extends FragmentActivity
     GoogleMap mMap;
     ResultReceiver DirectionsReceiver;
     List<LatLng> PolyLocations;
+    Marker Driver;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -114,15 +118,30 @@ public class MainActivity extends FragmentActivity
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
         MarkerOptions destination = new MarkerOptions().position(PolyLocations.get(finalPosition))
                                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE));
-        mMap.addMarker(Origin);
+        Driver =  mMap.addMarker(Origin);
         mMap.addMarker(destination);
     }
 
     //Moving Camera to cover the two positions
-    private void moveCameraToPosition(GoogleMap mMap, List<LatLng> polyLocations, int finalPosition) {
+    private void moveCameraToPosition(GoogleMap mMap, final List<LatLng> polyLocations, int finalPosition) {
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
         builder.include(polyLocations.get(0)).include(polyLocations.get(finalPosition));
         LatLngBounds bounds = builder.build();
-        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 75),6000,null);
+        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 75), 500, new GoogleMap.CancelableCallback() {
+            @Override
+            public void onFinish() {
+                AdewaleAnimator animator = new AdewaleAnimator(polyLocations,Driver);
+                animator.beginAnimation();
+            }
+
+            @Override
+            public void onCancel() {
+
+            }
+        });
+
+
     }
+
+
 }
