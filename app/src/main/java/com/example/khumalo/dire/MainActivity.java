@@ -21,13 +21,18 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.json.JSONException;
 
+import java.util.List;
+
 import static com.example.khumalo.dire.Utils.Utils.getPolyLineCode;
+import static com.google.maps.android.PolyUtil.decode;
+
 
 public class MainActivity extends FragmentActivity
         implements OnMapReadyCallback {
 
     GoogleMap mMap;
     ResultReceiver DirectionsReceiver;
+    List<LatLng> PolyLocations;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,7 +78,8 @@ public class MainActivity extends FragmentActivity
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-            Log.d("Tag", PolylineCode);
+            PolyLocations = decode(PolylineCode);
+            Log.d("Tag", PolyLocations.toString());
 
 
         }
