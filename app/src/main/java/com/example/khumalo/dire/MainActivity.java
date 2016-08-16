@@ -4,6 +4,7 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.graphics.Color;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
@@ -17,8 +18,10 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
@@ -69,9 +72,10 @@ public class MainActivity extends FragmentActivity
         LocalBroadcastManager.getInstance(this).unregisterReceiver(DirectionsReceiver);
     }
 
+
+
+    //Reciver for the DirectionService.
     public class ResultReceiver extends BroadcastReceiver{
-
-
 
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -84,20 +88,41 @@ public class MainActivity extends FragmentActivity
             }
             PolyLocations = decode(PolylineCode);
             Log.d("Tag", PolyLocations.toString());
-            drawPath(mMap, PolyLocations);
-
+            updateMap(mMap, PolyLocations);
         }
     }
 
-    private void drawPath(GoogleMap mMap, List<LatLng> polyLocations) {
+    //Setting Up the Locations Retrieved from the DirectionsAPI
+    private void updateMap(GoogleMap mMap, List<LatLng> polyLocations) {
         int finalPosition = polyLocations.size()-1;
-        PolylineOptions rectOptions = new PolylineOptions()
-                .addAll(polyLocations);
+        drawPolylineOriginToDestination(mMap, polyLocations);
+        addOrigitToDestinationMarkers(mMap, polyLocations, finalPosition);
+        moveCameraToPosition(mMap, polyLocations, finalPosition);
+    }
 
+
+   //Drawing a polyline on the Map
+    private void drawPolylineOriginToDestination(GoogleMap mMap, List<LatLng> polyLocations) {
+        PolylineOptions rectOptions = new PolylineOptions()
+                           .addAll(polyLocations);
         Polyline polyline = mMap.addPolyline(rectOptions);
+    }
+
+    //Addition of Markers Between origin and destination
+    private void addOrigitToDestinationMarkers(GoogleMap mMap, List<LatLng> polyLocations, int finalPosition) {
+        MarkerOptions Origin = new MarkerOptions().position(polyLocations.get(0))
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
+        MarkerOptions destination = new MarkerOptions().position(PolyLocations.get(finalPosition))
+                               .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE));
+        mMap.addMarker(Origin);
+        mMap.addMarker(destination);
+    }
+
+    //Moving Camera to cover the two positions
+    private void moveCameraToPosition(GoogleMap mMap, List<LatLng> polyLocations, int finalPosition) {
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
         builder.include(polyLocations.get(0)).include(polyLocations.get(finalPosition));
         LatLngBounds bounds = builder.build();
-        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds,0),4000,null);
+        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 75),6000,null);
     }
 }
