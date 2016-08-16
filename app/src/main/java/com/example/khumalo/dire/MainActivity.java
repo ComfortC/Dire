@@ -12,11 +12,16 @@ import android.util.Log;
 import android.widget.TextView;
 
 import com.example.khumalo.dire.Utils.Constants;
+import com.example.khumalo.dire.Utils.Utils;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+
+import org.json.JSONException;
+
+import static com.example.khumalo.dire.Utils.Utils.getPolyLineCode;
 
 public class MainActivity extends FragmentActivity
         implements OnMapReadyCallback {
@@ -61,7 +66,15 @@ public class MainActivity extends FragmentActivity
 
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d("Tag", intent.getStringExtra(Constants.RESULT_EXTRA));
+
+            String PolylineCode = null;
+            try {
+                PolylineCode = getPolyLineCode(intent.getStringExtra(Constants.RESULT_EXTRA));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            Log.d("Tag", PolylineCode);
+
 
         }
     }

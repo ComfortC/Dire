@@ -12,7 +12,7 @@ public class Utils {
 
 
     //Polyline
-    private static String getPolyLineCode(String geoJson) throws JSONException {
+    public static String getPolyLineCode(String geoJson) throws JSONException {
         JSONObject parser = new JSONObject(geoJson);
         JSONArray contents = parser.getJSONArray("routes");
         JSONObject route = contents.getJSONObject(0);
@@ -22,7 +22,7 @@ public class Utils {
     }
 
     //Distance
-    private static String getDistanceFromJson(String geoJson) throws JSONException {
+    public static String getDistanceFromJson(String geoJson) throws JSONException {
         JSONObject parser = new JSONObject(geoJson);
         JSONArray contents = parser.getJSONArray("routes");
         JSONObject route = contents.getJSONObject(0);
@@ -32,7 +32,7 @@ public class Utils {
     }
 
     //Time
-    private static String getTimeFromJson(String geoJson) throws JSONException {
+    public static String getTimeFromJson(String geoJson) throws JSONException {
         JSONObject parser = new JSONObject(geoJson);
         JSONArray contents = parser.getJSONArray("routes");
         JSONObject route = contents.getJSONObject(0);
@@ -45,7 +45,7 @@ public class Utils {
 
     //Return the Steps required from origin to destination,
 
-    private static JSONArray getSteps(String geoJson) throws JSONException {
+    public static JSONArray getSteps(String geoJson) throws JSONException {
         JSONObject parser = new JSONObject(geoJson);
         JSONArray contents = parser.getJSONArray("routes");
         JSONObject route = contents.getJSONObject(0);
@@ -55,7 +55,7 @@ public class Utils {
     }
 
     //Getting the distance for the Step
-    private static int getStepDistance(JSONArray steps, int position) throws JSONException {
+     public static  int getStepDistance(JSONArray steps, int position) throws JSONException {
         if(steps.length()<= position){
             return -1;
         }
@@ -63,7 +63,7 @@ public class Utils {
     }
 
     //Getting the time for the step
-    private static int getStepTime(JSONArray steps, int position) throws JSONException {
+    public static int getStepTime(JSONArray steps, int position) throws JSONException {
         if(steps.length()<= position){
             return -1;
         }
