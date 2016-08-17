@@ -92,7 +92,10 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onMapReady(GoogleMap googleMap) {
       mMap = googleMap;
-
+        Toast toast = Toast.makeText(getBaseContext(), "Where are you going today Comfort?", Toast.LENGTH_LONG);
+        toast.setGravity(Gravity.CENTER_VERTICAL,0,0);
+        toast.show();
+        buildPlacePickerAutoCompleteDialog();
     }
 
     @Override
@@ -237,10 +240,7 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onConnected(Bundle bundle) {
         Log.d(Tag, "The client has been connected");
-        Toast toast = Toast.makeText(getBaseContext(), "Where are you going today Comfort?", Toast.LENGTH_LONG);
-        toast.setGravity(Gravity.CENTER_VERTICAL,0,0);
-        toast.show();
-        buildPlacePickerAutoCompleteDialog();
+
     }
 
     @Override
