@@ -86,16 +86,16 @@ public class MainActivity extends AppCompatActivity
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         DirectionsReceiver = new ResultReceiver();
-
+        Toast toast = Toast.makeText(getBaseContext(), "Where are you going today Comfort?", Toast.LENGTH_LONG);
+        toast.setGravity(Gravity.CENTER_VERTICAL,0,0);
+        toast.show();
+        buildPlacePickerAutoCompleteDialog();
 }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
       mMap = googleMap;
-        Toast toast = Toast.makeText(getBaseContext(), "Where are you going today Comfort?", Toast.LENGTH_LONG);
-        toast.setGravity(Gravity.CENTER_VERTICAL,0,0);
-        toast.show();
-        buildPlacePickerAutoCompleteDialog();
+
     }
 
     @Override
