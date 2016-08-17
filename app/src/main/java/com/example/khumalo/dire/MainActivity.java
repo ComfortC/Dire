@@ -1,5 +1,6 @@
 package com.example.khumalo.dire;
 
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -44,6 +45,8 @@ public class MainActivity extends AppCompatActivity
     ResultReceiver DirectionsReceiver;
     List<LatLng> PolyLocations;
     Marker Driver;
+
+    private ProgressDialog progressDialog;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -55,6 +58,8 @@ public class MainActivity extends AppCompatActivity
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         DirectionsReceiver = new ResultReceiver();
+        progressDialog = ProgressDialog.show(this, "Please wait.",
+                "Searching for your ride...!", true);
         Intent intent = new Intent(this, DirectionService.class);
         startService(intent);
 
@@ -86,7 +91,7 @@ public class MainActivity extends AppCompatActivity
 
         @Override
         public void onReceive(Context context, Intent intent) {
-
+            progressDialog.dismiss();
             String PolylineCode = null;
             try {
                 PolylineCode = getPolyLineCode(intent.getStringExtra(Constants.RESULT_EXTRA));
