@@ -35,9 +35,9 @@ import java.util.List;
 
 import static com.example.khumalo.dire.Utils.Utils.getPolyLineCode;
 import static com.google.maps.android.PolyUtil.decode;
+import android.support.v7.widget.Toolbar;
 
-
-public class MainActivity extends FragmentActivity
+public class MainActivity extends AppCompatActivity
         implements OnMapReadyCallback {
 
     GoogleMap mMap;
@@ -48,6 +48,9 @@ public class MainActivity extends FragmentActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Toolbar topToolBar = (Toolbar)findViewById(R.id.toolbar);
+        setSupportActionBar(topToolBar);
+        getSupportActionBar().setDisplayShowTitleEnabled(false);
         MapFragment mapFragment = (MapFragment) getFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
@@ -127,7 +130,7 @@ public class MainActivity extends FragmentActivity
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
         builder.include(polyLocations.get(0)).include(polyLocations.get(finalPosition));
         LatLngBounds bounds = builder.build();
-        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 75), 500, new GoogleMap.CancelableCallback() {
+        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 200), 4000, new GoogleMap.CancelableCallback() {
             @Override
             public void onFinish() {
                 AdewaleAnimator animator = new AdewaleAnimator(polyLocations,Driver);
