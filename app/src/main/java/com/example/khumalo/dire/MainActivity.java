@@ -1,19 +1,29 @@
 package com.example.khumalo.dire;
 
+import android.Manifest;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.support.annotation.NonNull;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Gravity;
 import android.widget.TextView;
 
 import com.example.khumalo.dire.MarkerAnimation.AdewaleAnimator;
 import com.example.khumalo.dire.Utils.Constants;
+import com.example.khumalo.dire.Utils.PermissionUtils;
 import com.example.khumalo.dire.Utils.Utils;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
+import com.google.android.gms.common.GooglePlayServicesRepairableException;
+import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -26,6 +36,11 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
+import com.google.android.gms.location.places.Place;
+import com.google.android.gms.location.places.Places;
+import com.google.android.gms.location.places.ui.PlaceAutocomplete;
+import com.google.android.gms.location.places.ui.PlacePicker;
+
 import org.json.JSONException;
 
 import java.util.List;
@@ -33,9 +48,20 @@ import java.util.List;
 import static com.example.khumalo.dire.Utils.Utils.getPolyLineCode;
 import static com.google.maps.android.PolyUtil.decode;
 import android.support.v7.widget.Toolbar;
+import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity
-        implements OnMapReadyCallback {
+        implements OnMapReadyCallback, GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks {
+
+
+    GoogleApiClient mGoogleApiClient;
+    private static final String Tag = "Tag";
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
+    private static final  int PLACE_PICKER_REQUEST = 2;
+    private static final int PLACE_AUTOCOMPLETE_REQUEST_CODE = 3;
+    private boolean mPermissionDenied = false;
+
+
 
     GoogleMap mMap;
     ResultReceiver DirectionsReceiver;
@@ -50,6 +76,7 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        buildGoogleClient();
         DistanceToArrival =(TextView) findViewById(R.id.tvDistance);
         TimeToArrival =  (TextView) findViewById(R.id.tvDuration);
         Toolbar topToolBar = (Toolbar)findViewById(R.id.toolbar);
@@ -59,10 +86,6 @@ public class MainActivity extends AppCompatActivity
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         DirectionsReceiver = new ResultReceiver();
-        progressDialog = ProgressDialog.show(this, "Please wait.",
-                "Searching for your ride...!", true);
-        Intent intent = new Intent(this, DirectionService.class);
-        startService(intent);
 
 }
 
@@ -75,6 +98,11 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onResume() {
         super.onResume();
+        if (mPermissionDenied) {
+            // Permission was not granted, display error dialog.
+            showMissingPermissionError();
+            mPermissionDenied = false;
+        }
         LocalBroadcastManager.getInstance(this).registerReceiver(DirectionsReceiver,
                 new IntentFilter(Constants.BROADCAST_ACTION));
     }
@@ -169,5 +197,143 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+
+
+
+    ////////GoogleClientImplementation
+
+    ////////////
+    protected synchronized void buildGoogleClient() {
+        mGoogleApiClient = new GoogleApiClient
+                .Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(Places.GEO_DATA_API)
+                .addApi(Places.PLACE_DETECTION_API)
+                .enableAutoManage(this, this)
+                .build();
+
+    }
+
+
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        mGoogleApiClient.connect();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        mGoogleApiClient.disconnect();
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult connectionResult) {
+        Log.d(Tag, "Connection has failed");
+    }
+
+    @Override
+    public void onConnected(Bundle bundle) {
+        Log.d(Tag, "The client has been connected");
+        Toast toast = Toast.makeText(getBaseContext(), "Where are you going today Comfort?", Toast.LENGTH_LONG);
+        toast.setGravity(Gravity.CENTER_VERTICAL,0,0);
+        toast.show();
+        buildPlacePickerAutoCompleteDialog();
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+        Log.d(Tag, "The connection has been suspended");
+    }
+
+
+    /// Building a Place Picker dialog with a map
+    private void buildPlacePickerMapDialog() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Permission to access the location is missing.
+            PermissionUtils.requestPermission(this, LOCATION_PERMISSION_REQUEST_CODE,
+                    Manifest.permission.ACCESS_FINE_LOCATION, true);
+
+        }else{
+            Log.d(Tag, "The Location Access has been Granted");
+            PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
+            try {
+                startActivityForResult(builder.build(this), PLACE_PICKER_REQUEST);
+            } catch (GooglePlayServicesRepairableException e) {
+                e.printStackTrace();
+            } catch (GooglePlayServicesNotAvailableException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+    }
+
+    ///Building Place AutoComplete without a Dialog
+    private void buildPlacePickerAutoCompleteDialog(){
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Permission to access the location is missing.
+            PermissionUtils.requestPermission(this, LOCATION_PERMISSION_REQUEST_CODE,
+                    Manifest.permission.ACCESS_FINE_LOCATION, true);
+
+        }else{
+            Log.d(Tag, "The Location Access has been Granted");
+            try {
+                Intent intent =
+                        new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_FULLSCREEN)
+                                .build(this);
+                startActivityForResult(intent, PLACE_AUTOCOMPLETE_REQUEST_CODE);
+            } catch (GooglePlayServicesRepairableException e) {
+                // TODO: Handle the error.
+            } catch (GooglePlayServicesNotAvailableException e) {
+                // TODO: Handle the error.
+            }
+
+        }
+    }
+
+
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == PLACE_AUTOCOMPLETE_REQUEST_CODE) {
+            if (resultCode == RESULT_OK) {
+                Place place = PlaceAutocomplete.getPlace(this, data);
+
+                progressDialog = ProgressDialog.show(this, "Please wait.",
+                        "Searching for your ride...!", true);
+                Intent intent = new Intent(this, DirectionService.class);
+                startService(intent);
+
+            }
+        }
+    }
+
+
+    private void showMissingPermissionError() {
+        PermissionUtils.PermissionDeniedDialog
+                .newInstance(true).show(getSupportFragmentManager(), "dialog");
+    }
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        if (requestCode != LOCATION_PERMISSION_REQUEST_CODE) {
+            return;
+        }
+
+        if (PermissionUtils.isPermissionGranted(permissions, grantResults,
+                Manifest.permission.ACCESS_FINE_LOCATION)) {
+            Log.d(Tag, "The Location Access has been Granted");
+            buildPlacePickerAutoCompleteDialog();
+
+        } else {
+            // Display the missing permission error dialog when the fragments resume.
+            mPermissionDenied = true;
+        }
+    }
 
 }
