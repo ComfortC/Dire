@@ -283,8 +283,10 @@ public class MainActivity extends AppCompatActivity
         }else{
             Log.d(Tag, "The Location Access has been Granted");
             try {
+                LatLngBounds CapeTown = new LatLngBounds(new LatLng(-34.307222, 18.416507),new LatLng(-30.892878, 24.217288));
                 Intent intent =
                         new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_FULLSCREEN)
+                                .setBoundsBias(CapeTown)
                                 .build(this);
                 startActivityForResult(intent, PLACE_AUTOCOMPLETE_REQUEST_CODE);
             } catch (GooglePlayServicesRepairableException e) {
@@ -305,7 +307,7 @@ public class MainActivity extends AppCompatActivity
                 progressDialog = ProgressDialog.show(this, "Please wait.",
                         "Searching for your ride...!", true);
                 Intent intent = new Intent(this, DirectionService.class);
-                intent.putExtra(Constants.DESTINATION_EXTRA,place.getName());
+                intent.putExtra(Constants.DESTINATION_EXTRA,place.getId());
                 startService(intent);
 
             }

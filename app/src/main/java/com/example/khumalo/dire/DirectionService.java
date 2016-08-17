@@ -34,8 +34,10 @@ public class DirectionService extends IntentService {
         final String REGION_PARAM = "region";
         final String Origin = intent.getStringExtra(Constants.DESTINATION_EXTRA);
 
+
+        final String PLACE_ID_PREFIX = "place_id:"+Origin;
         Uri builtUri = Uri.parse(Constants.FORECAST_BASE_URL).buildUpon()
-                .appendQueryParameter(ORIGIN_PARAM, Origin)
+                .appendQueryParameter(ORIGIN_PARAM, PLACE_ID_PREFIX)
                 .appendQueryParameter(DESTINATION_PARAM, "Kenilworth")
                 .appendQueryParameter(REGION_PARAM,Constants.REGION_PARAM)
                 .appendQueryParameter(KEY_PARAM, getBaseContext().getString(R.string.ApiKey)).build();
