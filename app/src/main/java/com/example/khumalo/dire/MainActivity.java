@@ -305,6 +305,7 @@ public class MainActivity extends AppCompatActivity
                 progressDialog = ProgressDialog.show(this, "Please wait.",
                         "Searching for your ride...!", true);
                 Intent intent = new Intent(this, DirectionService.class);
+                intent.putExtra(Constants.DESTINATION_EXTRA,place.getName());
                 startService(intent);
 
             }

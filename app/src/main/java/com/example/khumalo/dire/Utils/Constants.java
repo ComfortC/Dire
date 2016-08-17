@@ -15,6 +15,7 @@ public final class Constants {
 
     public static final String FORECAST_BASE_URL = "https://maps.googleapis.com/maps/api/directions/json?";
     public static final String REGION_PARAM = "za";
+    public static final String DESTINATION_EXTRA = "WHERE_TO";
 
 }
 
