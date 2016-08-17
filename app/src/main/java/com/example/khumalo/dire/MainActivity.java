@@ -5,8 +5,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.graphics.Color;
-import android.support.v4.app.FragmentActivity;
 import android.support.v4.content.LocalBroadcastManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -14,8 +12,6 @@ import android.util.Log;
 import android.widget.TextView;
 
 import com.example.khumalo.dire.MarkerAnimation.AdewaleAnimator;
-import com.example.khumalo.dire.MarkerAnimation.LatLngInterpolator;
-import com.example.khumalo.dire.MarkerAnimation.MarkerAnimation;
 import com.example.khumalo.dire.Utils.Constants;
 import com.example.khumalo.dire.Utils.Utils;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -47,10 +43,15 @@ public class MainActivity extends AppCompatActivity
     Marker Driver;
 
     private ProgressDialog progressDialog;
+
+    TextView DistanceToArrival;
+    TextView TimeToArrival;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        DistanceToArrival =(TextView) findViewById(R.id.tvDistance);
+        TimeToArrival =  (TextView) findViewById(R.id.tvDuration);
         Toolbar topToolBar = (Toolbar)findViewById(R.id.toolbar);
         setSupportActionBar(topToolBar);
         getSupportActionBar().setDisplayShowTitleEnabled(false);
@@ -93,14 +94,31 @@ public class MainActivity extends AppCompatActivity
         public void onReceive(Context context, Intent intent) {
             progressDialog.dismiss();
             String PolylineCode = null;
+            String result = intent.getStringExtra(Constants.RESULT_EXTRA);
             try {
-                PolylineCode = getPolyLineCode(intent.getStringExtra(Constants.RESULT_EXTRA));
+                PolylineCode = getPolyLineCode(result);
+
             } catch (JSONException e) {
                 e.printStackTrace();
             }
+
+            UpdateDistanceTimeTextViews(result);
+
+
             PolyLocations = decode(PolylineCode);
             Log.d("Tag", PolyLocations.toString());
             updateMap(mMap, PolyLocations);
+        }
+    }
+
+    private void UpdateDistanceTimeTextViews(String result) {
+        try {
+            String distance = Utils.getDistanceFromJson(result);
+            String time = Utils.getTimeFromJson(result);
+            DistanceToArrival.setText(distance);
+            TimeToArrival.setText(time);
+        } catch (JSONException e) {
+            e.printStackTrace();
         }
     }
 
