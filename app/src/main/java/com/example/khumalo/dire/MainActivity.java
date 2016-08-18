@@ -6,7 +6,9 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
@@ -14,8 +16,11 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.Gravity;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.TextView;
 
+import com.example.khumalo.dire.Login.LoginActivity;
 import com.example.khumalo.dire.MarkerAnimation.AdewaleAnimator;
 import com.example.khumalo.dire.Utils.Constants;
 import com.example.khumalo.dire.Utils.PermissionUtils;
@@ -40,6 +45,7 @@ import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.Places;
 import com.google.android.gms.location.places.ui.PlaceAutocomplete;
 import com.google.android.gms.location.places.ui.PlacePicker;
+import com.google.firebase.auth.FirebaseAuth;
 
 import org.json.JSONException;
 
@@ -75,22 +81,49 @@ public class MainActivity extends AppCompatActivity
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
         buildGoogleClient();
-        DistanceToArrival =(TextView) findViewById(R.id.tvDistance);
-        TimeToArrival =  (TextView) findViewById(R.id.tvDuration);
-        Toolbar topToolBar = (Toolbar)findViewById(R.id.toolbar);
-        setSupportActionBar(topToolBar);
-        getSupportActionBar().setDisplayShowTitleEnabled(false);
-        MapFragment mapFragment = (MapFragment) getFragmentManager()
-                .findFragmentById(R.id.map);
-        mapFragment.getMapAsync(this);
-        DirectionsReceiver = new ResultReceiver();
-        Toast toast = Toast.makeText(getBaseContext(), "Where are you going today Comfort?", Toast.LENGTH_LONG);
-        toast.setGravity(Gravity.CENTER_VERTICAL,0,0);
-        toast.show();
-        buildPlacePickerAutoCompleteDialog();
-}
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        if (sp.getBoolean(Constants.isLoggedIn,false)) {
+            setContentView(R.layout.activity_main);
+            DistanceToArrival =(TextView) findViewById(R.id.tvDistance);
+            TimeToArrival =  (TextView) findViewById(R.id.tvDuration);
+            Toolbar topToolBar = (Toolbar)findViewById(R.id.toolbar);
+            setSupportActionBar(topToolBar);
+            getSupportActionBar().setDisplayShowTitleEnabled(false);
+            MapFragment mapFragment = (MapFragment) getFragmentManager()
+                    .findFragmentById(R.id.map);
+            mapFragment.getMapAsync(this);
+            DirectionsReceiver = new ResultReceiver();
+
+            buildPlacePickerAutoCompleteDialog();
+        } else {
+            Intent intent = new Intent(this, LoginActivity.class);
+            startActivity(intent);
+        }
+    }
+
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_base, menu);
+        return true;
+    }
+
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        if(id== R.id.action_logout){
+            FirebaseAuth.getInstance().signOut();
+            SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+            SharedPreferences.Editor editor = sp.edit();
+            editor.putBoolean(Constants.isLoggedIn,false);
+            editor.commit();
+            Intent intent = new Intent(this,LoginActivity.class);
+            startActivity(intent);
+        }
+        return super.onOptionsItemSelected(item);
+    }
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
@@ -283,6 +316,9 @@ public class MainActivity extends AppCompatActivity
         }else{
             Log.d(Tag, "The Location Access has been Granted");
             try {
+                Toast toast = Toast.makeText(getBaseContext(), "Where are you going today Comfort?", Toast.LENGTH_LONG);
+                toast.setGravity(Gravity.CENTER_VERTICAL,0,0);
+                toast.show();
                 LatLngBounds CapeTown = new LatLngBounds(new LatLng(-34.307222, 18.416507),new LatLng(-30.892878, 24.217288));
                 Intent intent =
                         new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_FULLSCREEN)
