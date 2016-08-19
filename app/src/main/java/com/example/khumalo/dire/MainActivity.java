@@ -9,6 +9,9 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.location.Location;
+import android.os.Handler;
+import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
@@ -19,11 +22,12 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.animation.LinearInterpolator;
 import android.widget.TextView;
 
 import com.example.khumalo.dire.Login.LoginActivity;
-import com.example.khumalo.dire.MarkerAnimation.AdewaleAnimator;
 import com.example.khumalo.dire.Model.Leg;
+import com.example.khumalo.dire.Model.Step;
 import com.example.khumalo.dire.Utils.Constants;
 import com.example.khumalo.dire.Utils.PermissionUtils;
 import com.example.khumalo.dire.Utils.Utils;
@@ -51,6 +55,7 @@ import com.google.firebase.auth.FirebaseAuth;
 
 import org.json.JSONException;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.example.khumalo.dire.Utils.Utils.buildLeg;
@@ -66,31 +71,31 @@ public class MainActivity extends AppCompatActivity
     GoogleApiClient mGoogleApiClient;
     private static final String Tag = "Tag";
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
-    private static final  int PLACE_PICKER_REQUEST = 2;
+    private static final int PLACE_PICKER_REQUEST = 2;
     private static final int PLACE_AUTOCOMPLETE_REQUEST_CODE = 3;
     private boolean mPermissionDenied = false;
-
-
+    Leg leg;
 
     GoogleMap mMap;
     ResultReceiver DirectionsReceiver;
     List<LatLng> PolyLocations;
     Marker Driver;
-
+    List<LatLng> stepEnds;
     private ProgressDialog progressDialog;
 
     TextView DistanceToArrival;
     TextView TimeToArrival;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         buildGoogleClient();
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
-        if (sp.getBoolean(Constants.isLoggedIn,false)) {
+        if (sp.getBoolean(Constants.isLoggedIn, false)) {
             setContentView(R.layout.activity_main);
-            DistanceToArrival =(TextView) findViewById(R.id.tvDistance);
-            TimeToArrival =  (TextView) findViewById(R.id.tvDuration);
-            Toolbar topToolBar = (Toolbar)findViewById(R.id.toolbar);
+            DistanceToArrival = (TextView) findViewById(R.id.tvDistance);
+            TimeToArrival = (TextView) findViewById(R.id.tvDuration);
+            Toolbar topToolBar = (Toolbar) findViewById(R.id.toolbar);
             setSupportActionBar(topToolBar);
             getSupportActionBar().setDisplayShowTitleEnabled(false);
             MapFragment mapFragment = (MapFragment) getFragmentManager()
@@ -116,13 +121,13 @@ public class MainActivity extends AppCompatActivity
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if(id== R.id.action_logout){
+        if (id == R.id.action_logout) {
             FirebaseAuth.getInstance().signOut();
             SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
             SharedPreferences.Editor editor = sp.edit();
-            editor.putBoolean(Constants.isLoggedIn,false);
+            editor.putBoolean(Constants.isLoggedIn, false);
             editor.commit();
-            Intent intent = new Intent(this,LoginActivity.class);
+            Intent intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
         }
         return super.onOptionsItemSelected(item);
@@ -130,7 +135,7 @@ public class MainActivity extends AppCompatActivity
 
     @Override
     public void onMapReady(GoogleMap googleMap) {
-      mMap = googleMap;
+        mMap = googleMap;
 
     }
 
@@ -153,9 +158,8 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-
     //Reciver for the DirectionService.
-    public class ResultReceiver extends BroadcastReceiver{
+    public class ResultReceiver extends BroadcastReceiver {
 
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -174,19 +178,36 @@ public class MainActivity extends AppCompatActivity
 
             PolyLocations = decode(PolylineCode);
             try {
-                Leg leg  =  buildLeg(result);
-                List<LatLng> stepPoline = decode(leg.getSteps().get(0).getStepPolyline());
-                PolylineOptions rectOptions = new PolylineOptions().color(Color.MAGENTA).width(25).addAll(stepPoline);
-                Log.d("Tag", "The Smaller Polyline "+String.valueOf(stepPoline.size()));
-                mMap.addPolyline(rectOptions);
+                leg = buildLeg(result);
+
+
+                 stepEnds = buildStepEnds();
+
+
+
+               // PolylineOptions rectOptions = new PolylineOptions().color(Color.MAGENTA).width(25).addAll(stepPoline);
+                Log.d("Tag", "The Smaller Polyline " + String.valueOf(stepEnds.size()));
+               // mMap.addPolyline(rectOptions);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
 
-            Log.d("Tag", "The Larger Polyline "+String.valueOf(PolyLocations.size()));
+            Log.d("Tag", "The Larger Polyline " + String.valueOf(PolyLocations.size()));
             updateMap(mMap, PolyLocations);
 
         }
+    }
+
+    @NonNull
+    private List<LatLng> buildStepEnds() {
+        List<LatLng> stepEnds = new ArrayList<LatLng>();
+
+        for(Step step: leg.getSteps()){
+           List<LatLng> span = decode(step.getStepPolyline());
+            int lastPosition = span.size()-1;
+            stepEnds.add(span.get(lastPosition));
+        }
+        return stepEnds;
     }
 
     private void UpdateDistanceTimeTextViews(String result) {
@@ -202,17 +223,17 @@ public class MainActivity extends AppCompatActivity
 
     //Setting Up the Locations Retrieved from the DirectionsAPI
     private void updateMap(GoogleMap mMap, List<LatLng> polyLocations) {
-        int finalPosition = polyLocations.size()-1;
+        int finalPosition = polyLocations.size() - 1;
         drawPolylineOriginToDestination(mMap, polyLocations);
         addOrigitToDestinationMarkers(mMap, polyLocations, finalPosition);
         moveCameraToPosition(mMap, polyLocations, finalPosition);
     }
 
 
-   //Drawing a polyline on the Map
+    //Drawing a polyline on the Map
     private void drawPolylineOriginToDestination(GoogleMap mMap, List<LatLng> polyLocations) {
         PolylineOptions rectOptions = new PolylineOptions()
-                           .addAll(polyLocations);
+                .addAll(polyLocations);
         Polyline polyline = mMap.addPolyline(rectOptions);
     }
 
@@ -221,8 +242,8 @@ public class MainActivity extends AppCompatActivity
         MarkerOptions Origin = new MarkerOptions().position(polyLocations.get(0))
                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE));
         MarkerOptions destination = new MarkerOptions().position(PolyLocations.get(finalPosition))
-                               .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE));
-        Driver =  mMap.addMarker(Origin);
+                .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_ROSE));
+        Driver = mMap.addMarker(Origin);
         mMap.addMarker(destination);
     }
 
@@ -234,7 +255,7 @@ public class MainActivity extends AppCompatActivity
         mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 200), 4000, new GoogleMap.CancelableCallback() {
             @Override
             public void onFinish() {
-                AdewaleAnimator animator = new AdewaleAnimator(polyLocations,Driver);
+                AdewaleAnimator animator = new AdewaleAnimator(polyLocations, Driver,stepEnds);
                 animator.beginAnimation();
             }
 
@@ -246,8 +267,6 @@ public class MainActivity extends AppCompatActivity
 
 
     }
-
-
 
 
     ////////GoogleClientImplementation
@@ -264,7 +283,6 @@ public class MainActivity extends AppCompatActivity
                 .build();
 
     }
-
 
 
     @Override
@@ -304,7 +322,7 @@ public class MainActivity extends AppCompatActivity
             PermissionUtils.requestPermission(this, LOCATION_PERMISSION_REQUEST_CODE,
                     Manifest.permission.ACCESS_FINE_LOCATION, true);
 
-        }else{
+        } else {
             Log.d(Tag, "The Location Access has been Granted");
             PlacePicker.IntentBuilder builder = new PlacePicker.IntentBuilder();
             try {
@@ -320,20 +338,20 @@ public class MainActivity extends AppCompatActivity
     }
 
     ///Building Place AutoComplete without a Dialog
-    private void buildPlacePickerAutoCompleteDialog(){
+    private void buildPlacePickerAutoCompleteDialog() {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
                 != PackageManager.PERMISSION_GRANTED) {
             // Permission to access the location is missing.
             PermissionUtils.requestPermission(this, LOCATION_PERMISSION_REQUEST_CODE,
                     Manifest.permission.ACCESS_FINE_LOCATION, true);
 
-        }else{
+        } else {
             Log.d(Tag, "The Location Access has been Granted");
             try {
                 Toast toast = Toast.makeText(getBaseContext(), "Where are you going today Comfort?", Toast.LENGTH_LONG);
-                toast.setGravity(Gravity.CENTER_VERTICAL,0,0);
+                toast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
                 toast.show();
-                LatLngBounds CapeTown = new LatLngBounds(new LatLng(-34.307222, 18.416507),new LatLng(-30.892878, 24.217288));
+                LatLngBounds CapeTown = new LatLngBounds(new LatLng(-34.307222, 18.416507), new LatLng(-30.892878, 24.217288));
                 Intent intent =
                         new PlaceAutocomplete.IntentBuilder(PlaceAutocomplete.MODE_FULLSCREEN)
                                 .setBoundsBias(CapeTown)
@@ -357,7 +375,7 @@ public class MainActivity extends AppCompatActivity
                 progressDialog = ProgressDialog.show(this, "Please wait.",
                         "Searching for your ride...!", true);
                 Intent intent = new Intent(this, DirectionService.class);
-                intent.putExtra(Constants.DESTINATION_EXTRA,place.getId());
+                intent.putExtra(Constants.DESTINATION_EXTRA, place.getId());
                 startService(intent);
 
             }
@@ -389,4 +407,119 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+
+    ///Animation Class
+    public class AdewaleAnimator {
+
+        private Marker trackingMarker;
+        List<LatLng> steps;
+
+        int stepNumber=0;
+
+        public AdewaleAnimator(List<LatLng> markers, Marker trackingMarker, List<LatLng> steps) {
+            this.Directions = markers;
+            this.trackingMarker = trackingMarker;
+            this.steps = steps;
+        }
+
+        public void beginAnimation() {
+            mHandler.post(animator);
+        }
+
+        private final Handler mHandler = new Handler();
+        private Animator animator = new Animator();
+        List<LatLng> Directions;
+
+        public class Animator implements Runnable {
+
+            private static final int ANIMATE_SPEEED = 500;
+
+            private final LinearInterpolator interpolator = new LinearInterpolator();
+
+            int currentIndex = 0;
+
+            long start = SystemClock.uptimeMillis();
+
+
+            public void stop() {
+                trackingMarker.remove();
+                mHandler.removeCallbacks(animator);
+
+            }
+
+
+            public void stopAnimation() {
+                animator.stop();
+            }
+
+
+            @Override
+            public void run() {
+
+                long elapsed = SystemClock.uptimeMillis() - start;
+                double t = interpolator.getInterpolation((float) elapsed / ANIMATE_SPEEED);
+
+                LatLng endLatLng = getEndLatLng();
+                LatLng beginLatLng = getBeginLatLng();
+
+                double lat = t * endLatLng.latitude + (1 - t) * beginLatLng.latitude;
+                double lng = t * endLatLng.longitude + (1 - t) * beginLatLng.longitude;
+                LatLng newPosition = new LatLng(lat, lng);
+
+                if(isMatch(newPosition)){
+                    Log.d("Tag", "ExcutedEqual "+newPosition.toString());
+                    DistanceToArrival.setText(leg.getRemainingDistance(stepNumber));
+                    TimeToArrival.setText(leg.getRemainingTime(stepNumber));
+                    stepNumber++;
+                }
+                trackingMarker.setPosition(newPosition);
+
+                if (t < 1) {
+                    mHandler.postDelayed(this, 16);
+                } else {
+                    // imagine 5 elements -  0|1|2|3|4 currentindex must be smaller than 4
+                    if (currentIndex < Directions.size() - 2) {
+
+                        currentIndex++;
+
+                        start = SystemClock.uptimeMillis();
+                        mHandler.postDelayed(animator, 16);
+
+                    } else {
+                        currentIndex++;
+                        stopAnimation();
+                    }
+
+                }
+            }
+
+            private boolean isMatch(LatLng endLatLng) {
+                if( stepNumber>=steps.size()){
+                    return false;
+                }
+                Location onPolyline = convertLatLngToLocation(endLatLng);
+                Location onStep = convertLatLngToLocation(steps.get(stepNumber));
+                float distanceInMeters = onPolyline.distanceTo(onStep);
+                return distanceInMeters<100;
+            }
+
+            private LatLng getEndLatLng() {
+                return Directions.get(currentIndex + 1);
+            }
+
+            private LatLng getBeginLatLng() {
+                return Directions.get(currentIndex);
+            }
+
+
+        }
+
+        private Location convertLatLngToLocation(LatLng latLng) {
+            Location loc = new Location("someLoc");
+            loc.setLatitude(latLng.latitude);
+            loc.setLongitude(latLng.longitude);
+            return loc;
+        }
+
+    }
 }
