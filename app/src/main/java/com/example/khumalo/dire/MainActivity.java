@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
@@ -22,6 +23,7 @@ import android.widget.TextView;
 
 import com.example.khumalo.dire.Login.LoginActivity;
 import com.example.khumalo.dire.MarkerAnimation.AdewaleAnimator;
+import com.example.khumalo.dire.Model.Leg;
 import com.example.khumalo.dire.Utils.Constants;
 import com.example.khumalo.dire.Utils.PermissionUtils;
 import com.example.khumalo.dire.Utils.Utils;
@@ -51,6 +53,7 @@ import org.json.JSONException;
 
 import java.util.List;
 
+import static com.example.khumalo.dire.Utils.Utils.buildLeg;
 import static com.example.khumalo.dire.Utils.Utils.getPolyLineCode;
 import static com.google.maps.android.PolyUtil.decode;
 import android.support.v7.widget.Toolbar;
@@ -170,8 +173,19 @@ public class MainActivity extends AppCompatActivity
 
 
             PolyLocations = decode(PolylineCode);
-            Log.d("Tag", PolyLocations.toString());
+            try {
+                Leg leg  =  buildLeg(result);
+                List<LatLng> stepPoline = decode(leg.getSteps().get(0).getStepPolyline());
+                PolylineOptions rectOptions = new PolylineOptions().color(Color.MAGENTA).width(25).addAll(stepPoline);
+                Log.d("Tag", "The Smaller Polyline "+String.valueOf(stepPoline.size()));
+                mMap.addPolyline(rectOptions);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+            Log.d("Tag", "The Larger Polyline "+String.valueOf(PolyLocations.size()));
             updateMap(mMap, PolyLocations);
+
         }
     }
 
