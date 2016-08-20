@@ -22,6 +22,7 @@ import android.util.Log;
 import android.view.Gravity;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.animation.LinearInterpolator;
 import android.widget.TextView;
 
@@ -35,6 +36,7 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
@@ -46,6 +48,8 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+
+import android.support.design.widget.FloatingActionButton;
 
 import com.google.android.gms.location.places.Place;
 import com.google.android.gms.location.places.Places;
@@ -61,13 +65,14 @@ import java.util.List;
 import static com.example.khumalo.dire.Utils.Utils.buildLeg;
 import static com.example.khumalo.dire.Utils.Utils.getPolyLineCode;
 import static com.google.maps.android.PolyUtil.decode;
+
 import android.support.v7.widget.Toolbar;
 import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity
         implements OnMapReadyCallback, GoogleApiClient.OnConnectionFailedListener, GoogleApiClient.ConnectionCallbacks {
 
-
+    Location mLastLocation;
     GoogleApiClient mGoogleApiClient;
     private static final String Tag = "Tag";
     private static final int LOCATION_PERMISSION_REQUEST_CODE = 1;
@@ -75,14 +80,14 @@ public class MainActivity extends AppCompatActivity
     private static final int PLACE_AUTOCOMPLETE_REQUEST_CODE = 3;
     private boolean mPermissionDenied = false;
     Leg leg;
-
+    Polyline mainPolyline;
     GoogleMap mMap;
     ResultReceiver DirectionsReceiver;
     List<LatLng> PolyLocations;
     Marker Driver;
     List<LatLng> stepEnds;
     private ProgressDialog progressDialog;
-
+    String current_Place_extra;
     TextView DistanceToArrival;
     TextView TimeToArrival;
 
@@ -102,7 +107,15 @@ public class MainActivity extends AppCompatActivity
                     .findFragmentById(R.id.map);
             mapFragment.getMapAsync(this);
             DirectionsReceiver = new ResultReceiver();
-
+            FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.find_me_a_ride);
+            topToolBar.bringToFront();
+            fab.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    mainPolyline.remove();
+                    buildPlacePickerAutoCompleteDialog();
+                }
+            });
             buildPlacePickerAutoCompleteDialog();
         } else {
             Intent intent = new Intent(this, LoginActivity.class);
@@ -181,13 +194,12 @@ public class MainActivity extends AppCompatActivity
                 leg = buildLeg(result);
 
 
-                 stepEnds = buildStepEnds();
+                stepEnds = buildStepEnds();
 
 
-
-               // PolylineOptions rectOptions = new PolylineOptions().color(Color.MAGENTA).width(25).addAll(stepPoline);
+                // PolylineOptions rectOptions = new PolylineOptions().color(Color.MAGENTA).width(25).addAll(stepPoline);
                 Log.d("Tag", "The Smaller Polyline " + String.valueOf(stepEnds.size()));
-               // mMap.addPolyline(rectOptions);
+                // mMap.addPolyline(rectOptions);
             } catch (JSONException e) {
                 e.printStackTrace();
             }
@@ -202,9 +214,9 @@ public class MainActivity extends AppCompatActivity
     private List<LatLng> buildStepEnds() {
         List<LatLng> stepEnds = new ArrayList<LatLng>();
 
-        for(Step step: leg.getSteps()){
-           List<LatLng> span = decode(step.getStepPolyline());
-            int lastPosition = span.size()-1;
+        for (Step step : leg.getSteps()) {
+            List<LatLng> span = decode(step.getStepPolyline());
+            int lastPosition = span.size() - 1;
             stepEnds.add(span.get(lastPosition));
         }
         return stepEnds;
@@ -234,7 +246,7 @@ public class MainActivity extends AppCompatActivity
     private void drawPolylineOriginToDestination(GoogleMap mMap, List<LatLng> polyLocations) {
         PolylineOptions rectOptions = new PolylineOptions()
                 .addAll(polyLocations);
-        Polyline polyline = mMap.addPolyline(rectOptions);
+        mainPolyline = mMap.addPolyline(rectOptions);
     }
 
     //Addition of Markers Between origin and destination
@@ -252,10 +264,10 @@ public class MainActivity extends AppCompatActivity
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
         builder.include(polyLocations.get(0)).include(polyLocations.get(finalPosition));
         LatLngBounds bounds = builder.build();
-        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 200), 4000, new GoogleMap.CancelableCallback() {
+        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 500), 4000, new GoogleMap.CancelableCallback() {
             @Override
             public void onFinish() {
-                AdewaleAnimator animator = new AdewaleAnimator(polyLocations, Driver,stepEnds);
+                AdewaleAnimator animator = new AdewaleAnimator(polyLocations, Driver, stepEnds);
                 animator.beginAnimation();
             }
 
@@ -279,6 +291,7 @@ public class MainActivity extends AppCompatActivity
                 .addOnConnectionFailedListener(this)
                 .addApi(Places.GEO_DATA_API)
                 .addApi(Places.PLACE_DETECTION_API)
+                .addApi(LocationServices.API)
                 .enableAutoManage(this, this)
                 .build();
 
@@ -305,6 +318,20 @@ public class MainActivity extends AppCompatActivity
     @Override
     public void onConnected(Bundle bundle) {
         Log.d(Tag, "The client has been connected");
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Permission to access the location is missing.
+            PermissionUtils.requestPermission(this, LOCATION_PERMISSION_REQUEST_CODE,
+                    Manifest.permission.ACCESS_FINE_LOCATION, true);
+
+        }else {
+            mLastLocation = LocationServices.FusedLocationApi.getLastLocation(
+                    mGoogleApiClient);
+            current_Place_extra = mLastLocation.getLatitude()+","+mLastLocation.getLongitude();
+            Log.d("Tag", "Place co-ordinates are " +current_Place_extra );
+        }
+
 
     }
 
@@ -376,6 +403,7 @@ public class MainActivity extends AppCompatActivity
                         "Searching for your ride...!", true);
                 Intent intent = new Intent(this, DirectionService.class);
                 intent.putExtra(Constants.DESTINATION_EXTRA, place.getId());
+                intent.putExtra(Constants.CURRENT_LOCATION,current_Place_extra);
                 startService(intent);
 
             }
@@ -449,7 +477,7 @@ public class MainActivity extends AppCompatActivity
 
 
             public void stopAnimation() {
-                animator.stop();
+                 animator.stop();
             }
 
 
@@ -467,7 +495,7 @@ public class MainActivity extends AppCompatActivity
                 LatLng newPosition = new LatLng(lat, lng);
 
                 if(isMatch(newPosition)){
-                    Log.d("Tag", "ExcutedEqual "+newPosition.toString());
+                    //Log.d("Tag", "ExcutedEqual "+newPosition.toString());
                     DistanceToArrival.setText(leg.getRemainingDistance(stepNumber));
                     TimeToArrival.setText(leg.getRemainingTime(stepNumber));
                     stepNumber++;

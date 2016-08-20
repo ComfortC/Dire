@@ -17,6 +17,7 @@ public final class Constants {
     public static final String REGION_PARAM = "za";
     public static final String DESTINATION_EXTRA = "WHERE_TO";
     public static final String isLoggedIn = "CHECK";
+    public static final String CURRENT_LOCATION = "CURRENT_LOCATION";
 
 }
 
