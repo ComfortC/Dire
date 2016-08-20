@@ -10,6 +10,8 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.location.Location;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
@@ -59,6 +61,12 @@ import com.google.firebase.auth.FirebaseAuth;
 
 import org.json.JSONException;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -91,6 +99,7 @@ public class MainActivity extends AppCompatActivity
     String current_Place_extra;
     TextView DistanceToArrival;
     TextView TimeToArrival;
+    String destination;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -402,7 +411,7 @@ public class MainActivity extends AppCompatActivity
                 LatLng random= new LatLng(mLastLocation.getLatitude(),mLastLocation.getLongitude());
                 LatLng result = getRandomLocation(random, 7000);
                 String randomResult = result.latitude+","+result.longitude;
-
+                destination = place.getId();
                 progressDialog = ProgressDialog.show(this, "Please wait.",
                         "Searching for your ride...!", true);
                 Intent intent = new Intent(this, DirectionService.class);
@@ -410,6 +419,7 @@ public class MainActivity extends AppCompatActivity
                 intent.putExtra(Constants.DESTINATION_EXTRA, place.getId());
                 intent.putExtra(Constants.CURRENT_LOCATION,current_Place_extra);
                 startService(intent);
+                new DownloadRawData().execute();
 
             }
         }
@@ -559,5 +569,123 @@ public class MainActivity extends AppCompatActivity
 
 
 
-    ///Async Task for the
+    ///Async Task for the to destination
+
+    public class DownloadRawData extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected String doInBackground(String... strings) {
+            Log.d("Tag","AsyncTask Called");
+            final String ORIGIN_PARAM =  "origin";
+            final String  DESTINATION_PARAM = "destination";
+            final String KEY_PARAM = "key";
+            final String REGION_PARAM = "region";
+
+            final String PLACE_ID_PREFIX = "place_id:"+ destination;
+
+            Uri builtUri = Uri.parse(Constants.FORECAST_BASE_URL).buildUpon()
+                    .appendQueryParameter(ORIGIN_PARAM, current_Place_extra)
+                    .appendQueryParameter(DESTINATION_PARAM, PLACE_ID_PREFIX)
+                    .appendQueryParameter(REGION_PARAM,Constants.REGION_PARAM)
+                    .appendQueryParameter(KEY_PARAM, getBaseContext().getString(R.string.ApiKey)).build();
+            String Directions =  DownloadDirections(builtUri.toString());
+
+            return Directions;
+        }
+
+
+        @Override
+        protected void onPostExecute(String res) {
+            String thisLocationToDestination="";
+            List<LatLng> polylineToDestination;
+            try {
+                thisLocationToDestination= getPolyLineCode(res);
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            polylineToDestination = decode(thisLocationToDestination);
+            drawPolylineCurrentPlaceToDestanation(mMap,polylineToDestination);
+            addMarkerToDestination(mMap,polylineToDestination,polylineToDestination.size()-1);
+
+        }
+
+
+
+
+        private String DownloadDirections(String Uri){
+            HttpURLConnection urlConnection = null;
+            BufferedReader reader = null;
+            try {
+
+                URL url = new URL(Uri);
+                // Create the request to OpenWeatherMap, and open the connection
+                urlConnection = (HttpURLConnection)url.openConnection();
+                urlConnection.setRequestMethod("GET");
+                urlConnection.connect();
+
+                // Read the input stream into a String
+                InputStream inputStream = urlConnection.getInputStream();
+                StringBuffer buffer = new StringBuffer();
+                if (inputStream == null) {
+                    // Nothing to do.
+                    return "";
+                }
+                reader = new BufferedReader(new InputStreamReader(inputStream));
+
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    // Since it's JSON, adding a newline isn't necessary (it won't affect parsing)
+                    // But it does make debugging a *lot* easier if you print out the completed
+                    // buffer for debugging.
+                    buffer.append(line + "\n");
+                }
+
+                if (buffer.length() == 0) {
+                    // Stream was empty.  No point in parsing.
+                    return "";
+                }
+
+                return buffer.toString();
+
+
+            } catch (IOException e) {
+                Log.e("Tag", "Error ", e);
+                // If the code didn't successfully get the weather data, there's no point in attemping
+                // to parse it.
+                return " ";
+            } finally {
+                if (urlConnection != null) {
+                    urlConnection.disconnect();
+                }
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (final IOException e) {
+                        Log.e("Tag", "Error closing stream", e);
+                    }
+                }
+            }
+        }
+
+
+        private void addMarkerToDestination(GoogleMap mMap, List<LatLng> polyLocations, int finalPosition) {
+
+            MarkerOptions destination = new MarkerOptions().position(polyLocations.get(finalPosition))
+                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET));
+
+            mMap.addMarker(destination);
+        }
+
+        private void drawPolylineCurrentPlaceToDestanation(GoogleMap mMap, List<LatLng> polyLocations) {
+            PolylineOptions polylineOptions = new PolylineOptions().
+                    geodesic(true).
+                    color(Color.BLUE).
+                    width(10);
+
+            polylineOptions.addAll(polyLocations);
+            mainPolyline = mMap.addPolyline(polylineOptions);
+        }
+
+    }
 }
