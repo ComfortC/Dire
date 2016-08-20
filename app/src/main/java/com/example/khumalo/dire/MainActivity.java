@@ -64,6 +64,7 @@ import java.util.List;
 
 import static com.example.khumalo.dire.Utils.Utils.buildLeg;
 import static com.example.khumalo.dire.Utils.Utils.getPolyLineCode;
+import static com.example.khumalo.dire.Utils.Utils.getRandomLocation;
 import static com.google.maps.android.PolyUtil.decode;
 
 import android.support.v7.widget.Toolbar;
@@ -264,7 +265,7 @@ public class MainActivity extends AppCompatActivity
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
         builder.include(polyLocations.get(0)).include(polyLocations.get(finalPosition));
         LatLngBounds bounds = builder.build();
-        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 500), 4000, new GoogleMap.CancelableCallback() {
+        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100), 4000, new GoogleMap.CancelableCallback() {
             @Override
             public void onFinish() {
                 AdewaleAnimator animator = new AdewaleAnimator(polyLocations, Driver, stepEnds);
@@ -398,10 +399,14 @@ public class MainActivity extends AppCompatActivity
         if (requestCode == PLACE_AUTOCOMPLETE_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
                 Place place = PlaceAutocomplete.getPlace(this, data);
+                LatLng random= new LatLng(mLastLocation.getLatitude(),mLastLocation.getLongitude());
+                LatLng result = getRandomLocation(random, 7000);
+                String randomResult = result.latitude+","+result.longitude;
 
                 progressDialog = ProgressDialog.show(this, "Please wait.",
                         "Searching for your ride...!", true);
                 Intent intent = new Intent(this, DirectionService.class);
+                intent.putExtra(Constants.CAR_LOCATION,randomResult);
                 intent.putExtra(Constants.DESTINATION_EXTRA, place.getId());
                 intent.putExtra(Constants.CURRENT_LOCATION,current_Place_extra);
                 startService(intent);
@@ -550,4 +555,9 @@ public class MainActivity extends AppCompatActivity
         }
 
     }
+
+
+
+
+    ///Async Task for the
 }

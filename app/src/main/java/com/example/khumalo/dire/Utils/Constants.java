@@ -18,6 +18,7 @@ public final class Constants {
     public static final String DESTINATION_EXTRA = "WHERE_TO";
     public static final String isLoggedIn = "CHECK";
     public static final String CURRENT_LOCATION = "CURRENT_LOCATION";
+    public static final String CAR_LOCATION = "CarLocation";
 
 }
 

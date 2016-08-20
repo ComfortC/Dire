@@ -35,10 +35,11 @@ public class DirectionService extends IntentService {
         final String Origin = intent.getStringExtra(Constants.DESTINATION_EXTRA);
         final String CURRENT_LOCATION =  intent.getStringExtra(Constants.CURRENT_LOCATION);
 
-
+        final String carLocation = intent.getStringExtra(Constants.CAR_LOCATION);
         final String PLACE_ID_PREFIX = "place_id:"+Origin;
+
         Uri builtUri = Uri.parse(Constants.FORECAST_BASE_URL).buildUpon()
-                .appendQueryParameter(ORIGIN_PARAM, PLACE_ID_PREFIX)
+                .appendQueryParameter(ORIGIN_PARAM, carLocation)
                 .appendQueryParameter(DESTINATION_PARAM, CURRENT_LOCATION)
                 .appendQueryParameter(REGION_PARAM,Constants.REGION_PARAM)
                 .appendQueryParameter(KEY_PARAM, getBaseContext().getString(R.string.ApiKey)).build();
@@ -107,5 +108,8 @@ public class DirectionService extends IntentService {
             }
         }
     }
+
+
+
 
 }
