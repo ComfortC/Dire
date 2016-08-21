@@ -31,6 +31,7 @@ import android.widget.TextView;
 import com.example.khumalo.dire.Login.LoginActivity;
 import com.example.khumalo.dire.Model.Leg;
 import com.example.khumalo.dire.Model.Step;
+import com.example.khumalo.dire.NotificationCenter.BuildNotification;
 import com.example.khumalo.dire.Utils.Constants;
 import com.example.khumalo.dire.Utils.PermissionUtils;
 import com.example.khumalo.dire.Utils.Utils;
@@ -487,7 +488,7 @@ public class MainActivity extends AppCompatActivity
             public void stop() {
                 trackingMarker.remove();
                 mHandler.removeCallbacks(animator);
-
+                BuildNotification.generateNotification(getBaseContext());
             }
 
 
