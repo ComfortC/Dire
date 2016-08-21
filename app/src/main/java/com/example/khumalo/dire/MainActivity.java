@@ -123,7 +123,10 @@ public class MainActivity extends AppCompatActivity
             fab.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    mainPolyline.remove();
+
+                    if (mainPolyline!=null) {
+                        mainPolyline.remove();
+                    }
                     buildPlacePickerAutoCompleteDialog();
                 }
             });
@@ -275,7 +278,7 @@ public class MainActivity extends AppCompatActivity
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
         builder.include(polyLocations.get(0)).include(polyLocations.get(finalPosition));
         LatLngBounds bounds = builder.build();
-        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100), 4000, new GoogleMap.CancelableCallback() {
+        mMap.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 500), 4000, new GoogleMap.CancelableCallback() {
             @Override
             public void onFinish() {
                 AdewaleAnimator animator = new AdewaleAnimator(polyLocations, Driver, stepEnds);
@@ -476,7 +479,7 @@ public class MainActivity extends AppCompatActivity
 
         public class Animator implements Runnable {
 
-            private static final int ANIMATE_SPEEED = 500;
+            private static final int ANIMATE_SPEEED = 1000;
 
             private final LinearInterpolator interpolator = new LinearInterpolator();
 

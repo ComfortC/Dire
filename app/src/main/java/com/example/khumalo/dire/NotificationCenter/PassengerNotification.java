@@ -1,5 +1,6 @@
 package com.example.khumalo.dire.NotificationCenter;
 
+import android.app.NotificationManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.Toolbar;
@@ -14,6 +15,12 @@ public class PassengerNotification extends AppCompatActivity {
         setContentView(R.layout.activity_passenger_notification);
         Toolbar topToolBar = (Toolbar) findViewById(R.id.second_Toolbar);
         setSupportActionBar(topToolBar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
         getSupportActionBar().setDisplayShowTitleEnabled(false);
+
+        NotificationManager nMgr = (NotificationManager) getSystemService(getBaseContext().NOTIFICATION_SERVICE);
+        nMgr.cancel(001);
     }
 }

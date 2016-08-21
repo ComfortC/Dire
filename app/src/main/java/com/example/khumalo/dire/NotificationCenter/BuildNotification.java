@@ -71,6 +71,7 @@ public class BuildNotification  {
         builder.setContentIntent(result);
         NotificationManager manager = (NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE);
         manager.notify(001,builder.build());
+
     }
 
 
