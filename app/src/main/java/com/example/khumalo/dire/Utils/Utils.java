@@ -1,6 +1,9 @@
 package com.example.khumalo.dire.Utils;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.location.Location;
+import android.preference.PreferenceManager;
 
 import com.example.khumalo.dire.Model.Distance;
 import com.example.khumalo.dire.Model.Duration;
@@ -205,6 +208,21 @@ public class Utils {
         //Get nearest point to the centre
         int indexOfNearestPointToCentre = randomDistances.indexOf(Collections.min(randomDistances));
         return randomPoints.get(indexOfNearestPointToCentre);
+    }
+
+
+    //SharedPreference
+    public  static void setDriverKey(String key, Context context){
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+        SharedPreferences.Editor editor = sp.edit();
+        editor.putString(Constants.DRIVER_KEY,key);
+        editor.commit();
+    }
+
+    //Get The Driver's Key
+    public  static String getDriverKey(Context context){
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(context);
+        return sp.getString(Constants.DRIVER_KEY,null);
     }
 
 }

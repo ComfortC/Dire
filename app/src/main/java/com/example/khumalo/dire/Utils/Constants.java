@@ -23,8 +23,12 @@ public final class Constants {
 
     public static final String FIREBASE_URL = "https://handy-sensor-136618.firebaseio.com/";
     public static final String DRIVERS_URL = "Drivers";
+    public static final String LOCATIONS_URL = "Locations";
 
     public static final String FIREBASE_DRIVERS_URL = FIREBASE_URL+DRIVERS_URL;
+    public static final String FIREBASE_LOCATIONS_URAL = FIREBASE_URL+LOCATIONS_URL;
+
+    public static final String DRIVER_KEY = PACKAGE_NAME+"KEY";
 
 
 

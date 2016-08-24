@@ -28,6 +28,7 @@ import android.view.View;
 import android.view.animation.LinearInterpolator;
 import android.widget.TextView;
 
+import com.example.khumalo.dire.DriverModel.DriverLocation;
 import com.example.khumalo.dire.DriverModel.DriverProfile;
 import com.example.khumalo.dire.Login.LoginActivity;
 import com.example.khumalo.dire.Model.Leg;
@@ -109,6 +110,7 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         buildGoogleClient();
         AddDriver();
+        AddLocation();
       /*  SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
         if (sp.getBoolean(Constants.isLoggedIn, false)) {
             setContentView(R.layout.activity_main);
@@ -144,8 +146,17 @@ public class MainActivity extends AppCompatActivity
         Firebase database = new Firebase(Constants.FIREBASE_URL).child(Constants.DRIVERS_URL);
         Firebase keyRef = database.push();
         String keyID = keyRef.getKey();
+        Utils.setDriverKey(keyID, this);
         DriverProfile driver = new DriverProfile("Comfort","Chinondiwana");
         keyRef.setValue(driver);
+    }
+
+
+    private void AddLocation(){
+        String keyID = Utils.getDriverKey(this);
+        Firebase database = new Firebase(Constants.FIREBASE_URL).child(Constants.LOCATIONS_URL).child(keyID);
+        DriverLocation here = new DriverLocation(-33.9943326,18.4655921);
+        database.setValue(here);
     }
 
 
