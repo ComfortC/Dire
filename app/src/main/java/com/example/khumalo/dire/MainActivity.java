@@ -94,6 +94,7 @@ public class MainActivity extends AppCompatActivity
     private boolean mPermissionDenied = false;
     Leg leg;
     Polyline mainPolyline;
+    Polyline currentPlaceToDestination;
     GoogleMap mMap;
     ResultReceiver DirectionsReceiver;
     List<LatLng> PolyLocations;
@@ -111,7 +112,7 @@ public class MainActivity extends AppCompatActivity
         buildGoogleClient();
         AddDriver();
         AddLocation();
-      /*  SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
         if (sp.getBoolean(Constants.isLoggedIn, false)) {
             setContentView(R.layout.activity_main);
             DistanceToArrival = (TextView) findViewById(R.id.tvDistance);
@@ -128,7 +129,9 @@ public class MainActivity extends AppCompatActivity
             fab.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-
+                    if (currentPlaceToDestination!=null) {
+                        currentPlaceToDestination.remove();
+                    }
                     if (mainPolyline!=null) {
                         mainPolyline.remove();
                     }
@@ -139,7 +142,7 @@ public class MainActivity extends AppCompatActivity
         } else {
             Intent intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
-        }*/
+        }
     }
 
     private void AddDriver() {
@@ -282,7 +285,7 @@ public class MainActivity extends AppCompatActivity
     private void drawPolylineOriginToDestination(GoogleMap mMap, List<LatLng> polyLocations) {
         PolylineOptions rectOptions = new PolylineOptions()
                 .addAll(polyLocations);
-        mainPolyline = mMap.addPolyline(rectOptions);
+        currentPlaceToDestination = mMap.addPolyline(rectOptions);
     }
 
     //Addition of Markers Between origin and destination
@@ -630,6 +633,9 @@ public class MainActivity extends AppCompatActivity
             } catch (JSONException e) {
                 e.printStackTrace();
             }
+
+            insertRouteIntoTheDatabase(thisLocationToDestination);
+
             polylineToDestination = decode(thisLocationToDestination);
             drawPolylineCurrentPlaceToDestanation(mMap,polylineToDestination);
             addMarkerToDestination(mMap,polylineToDestination,polylineToDestination.size()-1);
@@ -713,5 +719,11 @@ public class MainActivity extends AppCompatActivity
             mainPolyline = mMap.addPolyline(polylineOptions);
         }
 
+    }
+
+    private void insertRouteIntoTheDatabase(String thisLocationToDestination) {
+        Firebase database = new Firebase(Constants.FIREBASE_URL).child(Constants.ROUTES_URL);
+        String keyID = Utils.getDriverKey(getBaseContext());
+        database.child(keyID).setValue(thisLocationToDestination);
     }
 }
