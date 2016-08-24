@@ -28,6 +28,7 @@ import android.view.View;
 import android.view.animation.LinearInterpolator;
 import android.widget.TextView;
 
+import com.example.khumalo.dire.DriverModel.DriverProfile;
 import com.example.khumalo.dire.Login.LoginActivity;
 import com.example.khumalo.dire.Model.Leg;
 import com.example.khumalo.dire.Model.Step;
@@ -35,6 +36,7 @@ import com.example.khumalo.dire.NotificationCenter.BuildNotification;
 import com.example.khumalo.dire.Utils.Constants;
 import com.example.khumalo.dire.Utils.PermissionUtils;
 import com.example.khumalo.dire.Utils.Utils;
+import com.firebase.client.Firebase;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
@@ -106,7 +108,8 @@ public class MainActivity extends AppCompatActivity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         buildGoogleClient();
-        SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
+        AddDriver();
+      /*  SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(this);
         if (sp.getBoolean(Constants.isLoggedIn, false)) {
             setContentView(R.layout.activity_main);
             DistanceToArrival = (TextView) findViewById(R.id.tvDistance);
@@ -134,7 +137,15 @@ public class MainActivity extends AppCompatActivity
         } else {
             Intent intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
-        }
+        }*/
+    }
+
+    private void AddDriver() {
+        Firebase database = new Firebase(Constants.FIREBASE_URL).child(Constants.DRIVERS_URL);
+        Firebase keyRef = database.push();
+        String keyID = keyRef.getKey();
+        DriverProfile driver = new DriverProfile("Comfort","Chinondiwana");
+        keyRef.setValue(driver);
     }
 
 

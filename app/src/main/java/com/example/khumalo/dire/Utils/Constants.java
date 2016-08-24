@@ -20,5 +20,13 @@ public final class Constants {
     public static final String CURRENT_LOCATION = "CURRENT_LOCATION";
     public static final String CAR_LOCATION = "CarLocation";
 
+
+    public static final String FIREBASE_URL = "https://handy-sensor-136618.firebaseio.com/";
+    public static final String DRIVERS_URL = "Drivers";
+
+    public static final String FIREBASE_DRIVERS_URL = FIREBASE_URL+DRIVERS_URL;
+
+
+
 }
 
