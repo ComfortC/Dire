@@ -28,8 +28,11 @@ public final class Constants {
 
     public static final String FIREBASE_DRIVERS_URL = FIREBASE_URL+DRIVERS_URL;
     public static final String FIREBASE_LOCATIONS_URAL = FIREBASE_URL+LOCATIONS_URL;
+    public static final String FIREBASE_ROUTES_URL = FIREBASE_URL+ROUTES_URL;
 
     public static final String DRIVER_KEY = PACKAGE_NAME+"KEY";
+
+    public static final double TOLERANCE_IN_METERS = 300;
 
 
 

@@ -30,6 +30,7 @@ import android.widget.TextView;
 
 import com.example.khumalo.dire.DriverModel.DriverLocation;
 import com.example.khumalo.dire.DriverModel.DriverProfile;
+import com.example.khumalo.dire.DriverModel.DriverRoute;
 import com.example.khumalo.dire.Login.LoginActivity;
 import com.example.khumalo.dire.Model.Leg;
 import com.example.khumalo.dire.Model.Step;
@@ -37,7 +38,10 @@ import com.example.khumalo.dire.NotificationCenter.BuildNotification;
 import com.example.khumalo.dire.Utils.Constants;
 import com.example.khumalo.dire.Utils.PermissionUtils;
 import com.example.khumalo.dire.Utils.Utils;
+import com.firebase.client.DataSnapshot;
 import com.firebase.client.Firebase;
+import com.firebase.client.FirebaseError;
+import com.firebase.client.ValueEventListener;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GooglePlayServicesNotAvailableException;
 import com.google.android.gms.common.GooglePlayServicesRepairableException;
@@ -129,6 +133,7 @@ public class MainActivity extends AppCompatActivity
             fab.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
+                    retrieveRoutes();
                     if (currentPlaceToDestination!=null) {
                         currentPlaceToDestination.remove();
                     }
@@ -143,6 +148,25 @@ public class MainActivity extends AppCompatActivity
             Intent intent = new Intent(this, LoginActivity.class);
             startActivity(intent);
         }
+    }
+
+    private void retrieveRoutes() {
+        Firebase firebase = new Firebase(Constants.FIREBASE_ROUTES_URL);
+
+        firebase.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                Log.d("Tag", "The database returned " + dataSnapshot.getValue().toString() + " of Type " + dataSnapshot.getClass().getName());
+               for(DataSnapshot snapshot: dataSnapshot.getChildren()){
+                   Log.d("Tag","Key = "+snapshot.getKey()+"Value= "+snapshot.getValue().toString());
+               }
+                                      }
+
+            @Override
+            public void onCancelled(FirebaseError firebaseError) {
+                Log.d("Tag", "loadPost:onCancelled ", firebaseError.toException());
+            }
+        });
     }
 
     private void AddDriver() {
@@ -210,7 +234,7 @@ public class MainActivity extends AppCompatActivity
     }
 
 
-    //Reciver for the DirectionService.
+    //Receiver for the DirectionService.
     public class ResultReceiver extends BroadcastReceiver {
 
         @Override

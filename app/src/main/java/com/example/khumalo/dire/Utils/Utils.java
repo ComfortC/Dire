@@ -225,4 +225,33 @@ public class Utils {
         return sp.getString(Constants.DRIVER_KEY,null);
     }
 
+
+
+    //Determining if they can share
+    //Testing if the two points are found on the path
+    public static boolean isFoundAlongTheJourney(List<LatLng> journey,LatLng origin, LatLng destination){
+
+        return isInThePath(journey,origin) && isInThePath(journey,destination);
+    }
+
+    //Testing a single if a single point is found on the path
+    public static boolean isInThePath(List<LatLng> journey, LatLng point) {
+        Location location = convertLatLngToLocation(point);
+        for(LatLng wayPoint: journey){
+            Location pathPoint = convertLatLngToLocation(wayPoint);
+            if(location.distanceTo(pathPoint)<= Constants.TOLERANCE_IN_METERS){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    //Converting a LatLong to a Location Object
+    public static Location convertLatLngToLocation(LatLng latLng) {
+        Location loc = new Location("someLoc");
+        loc.setLatitude(latLng.latitude);
+        loc.setLongitude(latLng.longitude);
+        return loc;
+    }
+
 }
