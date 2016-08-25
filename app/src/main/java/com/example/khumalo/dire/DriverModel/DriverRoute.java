@@ -29,6 +29,10 @@ public class DriverRoute {
         return routePolylineCode;
     }
 
+    public List<LatLng> getWayLatLongPolyline() {
+        return wayLatLongPolyline;
+    }
+
     public String getKey() {
         return key;
     }
