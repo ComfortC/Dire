@@ -110,6 +110,8 @@ public class MainActivity extends AppCompatActivity
     TextView TimeToArrival;
     String destination;
 
+    Marker clientDestinationMarker;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -131,7 +133,11 @@ public class MainActivity extends AppCompatActivity
             fab.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
-                    retrieveRoutes();
+
+                    if (clientDestinationMarker!=null) {
+                        clientDestinationMarker.remove();
+                    }
+
                     if (currentPlaceToDestination!=null) {
                         currentPlaceToDestination.remove();
                     }
@@ -160,10 +166,6 @@ public class MainActivity extends AppCompatActivity
                    DriverRoute driverRoute = new DriverRoute(snapshot.getValue(String.class),snapshot.getKey());
                    driverRoutes.add(driverRoute);
                }
-
-                for(DriverRoute driverRoute: driverRoutes){
-                    drawPolylineCurrentPlaceToDestanation(mMap,driverRoute.getWayLatLongPolyline());
-                }
 
                                       }
 
@@ -735,21 +737,19 @@ public class MainActivity extends AppCompatActivity
             MarkerOptions destination = new MarkerOptions().position(polyLocations.get(finalPosition))
                     .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_VIOLET));
 
-            mMap.addMarker(destination);
+           clientDestinationMarker = mMap.addMarker(destination);
         }
 
+        private void drawPolylineCurrentPlaceToDestanation(GoogleMap mMap, List<LatLng> polyLocations) {
+            PolylineOptions polylineOptions = new PolylineOptions().
+                    geodesic(true).
+                    color(Color.BLUE).
+                    width(10);
 
+            polylineOptions.addAll(polyLocations);
+            mainPolyline = mMap.addPolyline(polylineOptions);
+        }
 
-    }
-
-    private void drawPolylineCurrentPlaceToDestanation(GoogleMap mMap, List<LatLng> polyLocations) {
-        PolylineOptions polylineOptions = new PolylineOptions().
-                geodesic(true).
-                color(Color.BLUE).
-                width(10);
-
-        polylineOptions.addAll(polyLocations);
-        mMap.addPolyline(polylineOptions);
     }
 
     private void insertRouteIntoTheDatabase(String thisLocationToDestination) {
